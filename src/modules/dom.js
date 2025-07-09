@@ -27,15 +27,17 @@ export const DOM = () => {
     startButton.disabled = true;
     startButton.addEventListener('click', () => {
       isPlacingShips = false;
-      game.startGame();
-      renderBoards();
-      messageElement.textContent = 'Attack the enemy board!';
-      startButton.disabled = true;
-      placeShipButton.disabled = true;
-      randomPlacementButton.disabled = true;
-      if (orientationButton) {
-        orientationButton.remove();
-        orientationButton = null;
+      if (game.startGame()) {
+        renderBoards();
+        messageElement.textContent = 'Attack the enemy board!';
+        startButton.disabled = true;
+        placeShipButton.disabled = true;
+        randomPlacementButton.disabled = true;
+        if (orientationButton) {
+          orientationButton.remove();
+          orientationButton = null;
+        }
+        console.log('Start Game clicked: attack phase begins');
       }
     });
 
@@ -60,6 +62,7 @@ export const DOM = () => {
         orientationButton.remove();
         orientationButton = null;
       }
+      console.log('Random Placement clicked: human ships placed');
     });
 
     const resetButton = document.createElement('button');
@@ -78,6 +81,7 @@ export const DOM = () => {
       renderBoards();
       messageElement.textContent =
         'Click Place Ships or Random Placement to position your ships!';
+      console.log('Reset Game clicked');
     });
 
     buttonsContainer.appendChild(placeShipButton);
@@ -152,24 +156,36 @@ export const DOM = () => {
       document.querySelector('#enemy-board .grid'),
       false
     );
+    console.log('Boards rendered');
   };
 
   const renderBoard = (board, gridElement, showShips) => {
     if (!gridElement) return;
     const grid = board.getGrid();
     const missedAttacks = board.getMissedAttacks();
+    const hitCells = board.getHitCells ? board.getHitCells() : [];
 
     Array.from(gridElement.children).forEach((cell) => {
       const x = parseInt(cell.dataset.x);
       const y = parseInt(cell.dataset.y);
 
       cell.className = 'cell';
-      if (missedAttacks.some(([mx, my]) => mx === x && my === y)) {
-        cell.classList.add('miss');
-      } else if (grid[x][y] && grid[x][y].getHits() > 0) {
-        cell.classList.add('hit');
-      } else if (showShips && grid[x][y]) {
+      const isMiss = missedAttacks.some(([mx, my]) => mx === x && my === y);
+      const isHit = grid[x][y] && hitCells.includes(`${x},${y}`);
+
+      if (isMiss) {
+        cell.classList.add('miss', 'attacked');
+        console.log(
+          `Rendering miss at x=${x}, y=${y} on ${showShips ? 'player' : 'enemy'} board`
+        );
+      } else if (isHit) {
+        cell.classList.add('hit', 'attacked');
+        console.log(
+          `Rendering hit at x=${x}, y=${y} on ${showShips ? 'player' : 'enemy'} board`
+        );
+      } else if (showShips && grid[x][y] && !isHit) {
         cell.classList.add('ship');
+        console.log(`Rendering ship at x=${x}, y=${y} on player board`);
       }
     });
   };
@@ -184,19 +200,69 @@ export const DOM = () => {
           handleShipPlacement(cell);
         }
       });
+      cell.addEventListener('mouseover', () => {
+        if (isPlacingShips) {
+          highlightShipPlacement(cell);
+        }
+      });
+      cell.addEventListener('mouseout', () => {
+        if (isPlacingShips) {
+          clearHighlight(playerBoardElement.querySelector('.grid'));
+        }
+      });
     });
 
     enemyCells.forEach((cell) => {
       cell.addEventListener('click', () => {
-        if (!isPlacingShips) {
+        if (!isPlacingShips && game.isGameStarted() && !game.isGameOver()) {
           handleAttack(cell);
+        } else if (isPlacingShips) {
+          messageElement.textContent =
+            'Finish placing ships and click Start Game to attack!';
+        } else if (!game.isGameStarted()) {
+          messageElement.textContent = 'Click Start Game to begin attacking!';
         }
       });
     });
   };
 
+  const highlightShipPlacement = (cell) => {
+    const x = parseInt(cell.dataset.x);
+    const y = parseInt(cell.dataset.y);
+    const isHorizontal =
+      orientationButton && orientationButton.textContent === 'Horizontal';
+    const length = game.getCurrentShipLength() || 2;
+    const gridElement = document.querySelector('#player-board .grid');
+
+    clearHighlight(gridElement);
+
+    for (let i = 0; i < length; i++) {
+      const posX = isHorizontal ? x + i : x;
+      const posY = isHorizontal ? y : y + i;
+      if (posX < 10 && posY < 10) {
+        const targetCell = gridElement.querySelector(
+          `[data-x="${posX}"][data-y="${posY}"]`
+        );
+        if (targetCell) {
+          targetCell.classList.add('hover');
+        }
+      }
+    }
+  };
+
+  const clearHighlight = (gridElement) => {
+    gridElement.querySelectorAll('.cell').forEach((cell) => {
+      cell.classList.remove('hover');
+    });
+  };
+
   const handleAttack = (cell) => {
     if (game.isGameOver()) {
+      messageElement.textContent = 'Game is over! Reset to play again.';
+      return;
+    }
+    if (!game.isGameStarted()) {
+      messageElement.textContent = 'Click Start Game to begin attacking!';
       return;
     }
 
@@ -216,6 +282,7 @@ export const DOM = () => {
       }
     } catch (error) {
       messageElement.textContent = error.message;
+      console.error(`Attack failed: ${error.message}`);
     }
   };
 
@@ -253,6 +320,7 @@ export const DOM = () => {
     document.querySelector('.buttons').appendChild(orientationButton);
 
     game.startShipPlacement([2, 3]);
+    console.log('Ship placement setup: orientation button added');
   };
 
   const handleShipPlacement = (cell) => {
@@ -280,6 +348,7 @@ export const DOM = () => {
       }
     } catch (error) {
       messageElement.textContent = error.message;
+      console.error(`Ship placement error: ${error.message}`);
     }
   };
 

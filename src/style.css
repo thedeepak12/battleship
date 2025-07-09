@@ -73,15 +73,27 @@ body {
   cursor: pointer;
 }
 
-.ship {
+.cell:not(.attacked):not(.hit):not(.miss):hover {
+  background-color: #4a8b9c;
+}
+
+.cell.attacked {
+  background-color: #808080;
+}
+
+.cell.hover {
+  background-color: #4a8b9c;
+}
+
+.cell.ship {
   background-color: #836b32;
 }
 
-.hit {
-  background-color: #dc143c;
+.cell.hit {
+  background-color: #836b32 !important;
 }
 
-.miss {
+.cell.miss {
   background-color: #ffffff;
 }
 

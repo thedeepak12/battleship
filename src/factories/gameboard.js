@@ -7,6 +7,7 @@ export const Gameboard = () => {
     .map(() => Array(size).fill(null));
   const ships = [];
   const missedAttacks = [];
+  const hitCells = new Set();
 
   const placeShip = (length, x, y, isHorizontal) => {
     if (!isValidPlacement(length, x, y, isHorizontal)) {
@@ -22,6 +23,9 @@ export const Gameboard = () => {
       grid[posX][posY] = ship;
     }
 
+    console.log(
+      `Ship placed on gameboard: length=${length}, x=${x}, y=${y}, horizontal=${isHorizontal}`
+    );
     return ship;
   };
 
@@ -33,8 +37,8 @@ export const Gameboard = () => {
       y < 0 ||
       x >= size ||
       y >= size ||
-      (isHorizontal && x + length >= size) ||
-      (!isHorizontal && y + length >= size)
+      (isHorizontal && x + length > size) ||
+      (!isHorizontal && y + length > size)
     ) {
       return false;
     }
@@ -57,24 +61,50 @@ export const Gameboard = () => {
       x < 0 ||
       y < 0 ||
       x >= size ||
-      y >= size ||
-      missedAttacks.some(([mx, my]) => mx === x && my === y)
+      y >= size
     ) {
-      throw new Error('Invalid attack coordinates');
+      throw new Error('Invalid coordinates');
+    }
+
+    const key = `${x},${y}`;
+    if (
+      missedAttacks.some(([mx, my]) => mx === x && my === y) ||
+      hitCells.has(key)
+    ) {
+      throw new Error('Cell already attacked');
     }
 
     const ship = grid[x][y];
     if (ship) {
       ship.hit();
+      hitCells.add(key);
+      console.log(`Attack hit: x=${x}, y=${y}, ship hits=${ship.getHits()}`);
       return true;
     }
 
     missedAttacks.push([x, y]);
+    console.log(`Attack missed: x=${x}, y=${y}`);
     return false;
   };
 
   const allShipsSunk = () =>
     ships.length > 0 && ships.every(({ ship }) => ship.isSunk());
+
+  const reset = () => {
+    for (let x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++) {
+        grid[x][y] = null;
+      }
+    }
+    ships.length = 0;
+    missedAttacks.length = 0;
+    hitCells.clear();
+    console.log(
+      'Gameboard reset: grid, ships, missedAttacks, hitCells cleared'
+    );
+  };
+
+  const getHitCells = () => Array.from(hitCells);
 
   return {
     placeShip,
@@ -82,5 +112,7 @@ export const Gameboard = () => {
     getMissedAttacks: () => missedAttacks,
     allShipsSunk,
     getGrid: () => grid.map((row) => [...row]),
+    reset,
+    getHitCells,
   };
 };
