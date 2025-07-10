@@ -231,7 +231,7 @@ export const DOM = () => {
     const y = parseInt(cell.dataset.y);
     const isHorizontal =
       orientationButton && orientationButton.textContent === 'Horizontal';
-    const length = game.getCurrentShipLength() || 2;
+    const length = game.getCurrentShipLength() || 1;
     const gridElement = document.querySelector('#player-board .grid');
 
     clearHighlight(gridElement);
@@ -303,7 +303,7 @@ export const DOM = () => {
 
   const setupShipPlacement = () => {
     isPlacingShips = true;
-    messageElement.textContent = `Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 2}). Use button to toggle orientation.`;
+    messageElement.textContent = `Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 1}). Use button to toggle orientation.`;
     startButton.disabled = true;
     placeShipButton.disabled = true;
     randomPlacementButton.disabled = true;
@@ -315,11 +315,11 @@ export const DOM = () => {
     orientationButton.addEventListener('click', () => {
       isHorizontal = !isHorizontal;
       orientationButton.textContent = isHorizontal ? 'Horizontal' : 'Vertical';
-      messageElement.textContent = `Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 2}). Orientation: ${orientationButton.textContent}.`;
+      messageElement.textContent = `Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 1}). Orientation: ${orientationButton.textContent}.`;
     });
     document.querySelector('.buttons').appendChild(orientationButton);
 
-    game.startShipPlacement([2, 3]);
+    game.startShipPlacement([1, 1, 1, 1, 2, 2, 2, 3, 3, 4]);
     console.log('Ship placement setup: orientation button added');
   };
 
@@ -333,7 +333,7 @@ export const DOM = () => {
       const placed = game.placeShip(x, y, isHorizontal);
       renderBoards();
       if (placed) {
-        messageElement.textContent = `Ship placed! Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 3}). Orientation: ${isHorizontal ? 'Horizontal' : 'Vertical'}.`;
+        messageElement.textContent = `Ship placed! Click a cell on your board to place a ship (length ${game.getCurrentShipLength() || 1}). Orientation: ${isHorizontal ? 'Horizontal' : 'Vertical'}.`;
       } else {
         messageElement.textContent =
           'All ships placed! Click Start Game to begin.';

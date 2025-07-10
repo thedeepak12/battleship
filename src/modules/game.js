@@ -41,7 +41,7 @@ export const Game = () => {
     if (!humanPlayer) {
       throw new Error('Game not initialized');
     }
-    const lengths = [2, 3];
+    const lengths = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4];
     humanPlayer.gameboard = Player('human').gameboard;
     lengths.forEach((length) => {
       let placed = false;
@@ -64,7 +64,7 @@ export const Game = () => {
     if (!computerPlayer) {
       throw new Error('Game not initialized');
     }
-    const lengths = [2, 3];
+    const lengths = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4];
     computerPlayer.gameboard = Player('computer').gameboard;
     lengths.forEach((length) => {
       let placed = false;

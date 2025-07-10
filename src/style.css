@@ -90,7 +90,7 @@ body {
 }
 
 .cell.hit {
-  background-color: #836b32 !important;
+  background-color: #ff0000 !important;
 }
 
 .cell.miss {
